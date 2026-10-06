@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>库位条码</title>
+    <style id="page-size"></style>
+  </head>
+  <body>
+    <header class="topbar no-print">
+      <svg class="mark" viewBox="0 0 20 20" aria-hidden="true">
+        <path fill="currentColor" d="M3 4h1.4v12H3zm2.6 0h.7v12h-.7zm2 0h1.6v12H7.6zm2.6 0H11v12H10.2zm2 0h.8v12h-.8zm2 0h1.6v12H14.2zM17 4h.8v12H17z" />
+      </svg>
+      <h1>库位条码</h1>
+      <span class="tag">Code 39</span>
+    </header>
+
+    <div class="page">
+      <form id="form" class="panel no-print">
+        <div class="seg-head" aria-hidden="true">
+          <span></span>
+          <span>起始值</span>
+          <span>结束值</span>
+          <span>增长方式</span>
+          <span>步长</span>
+          <span>位数</span>
+        </div>
+        <div id="segments"></div>
+
+        <p id="error" class="alert" role="alert" hidden>
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path fill="currentColor" d="M8 1.2a6.8 6.8 0 1 0 0 13.6A6.8 6.8 0 0 0 8 1.2zM7.2 4.6h1.6v4.6H7.2zm0 5.8h1.6V12H7.2z" />
+          </svg>
+          <span id="error-text"></span>
+        </p>
+
+        <div class="panel-foot">
+          <p id="count" class="count">将生成 <strong class="count-num">0</strong> 张</p>
+          <button type="submit" class="primary">生成标签</button>
+        </div>
+      </form>
+
+      <section class="stage">
+        <div class="stage-bar no-print">
+          <div class="stage-title">
+            <h2>标签预览</h2>
+            <p id="preview-hint" class="hint"></p>
+          </div>
+          <fieldset class="segmented" id="size-switch">
+            <legend>标签尺寸</legend>
+            <span class="segmented-thumb" aria-hidden="true"></span>
+            <label class="choice"><input type="radio" name="size" value="15x10" checked />15×10 cm</label>
+            <label class="choice"><input type="radio" name="size" value="7x4" />7×4 cm</label>
+          </fieldset>
+          <div class="actions">
+            <button type="button" id="print-label" disabled>打印 / 导出 PDF</button>
+            <button type="button" id="print-a4" disabled>A4 拼版打印</button>
+          </div>
+        </div>
+        <div id="preview" class="preview" aria-label="标签预览"></div>
+      </section>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
