@@ -1,6 +1,5 @@
 import "./style.css";
 import {
-  DEFAULT_SEGMENTS,
   countLabels,
   generateCodes,
   type GrowthMode,
@@ -13,6 +12,15 @@ const MODES: { value: GrowthMode; label: string }[] = [
   { value: "inc", label: "递增" },
   { value: "dec", label: "递减" },
 ];
+
+const PLACEHOLDERS = [
+  { start: "1", end: "1", step: "1", digits: "3" },
+  { start: "1", end: "1", step: "1", digits: "2" },
+  { start: "1", end: "1", step: "1", digits: "0" },
+  { start: "1", end: "1", step: "1", digits: "0" },
+];
+
+const EXAMPLE_CODE = "001.01.1.1";
 
 const form = document.querySelector<HTMLFormElement>("#form")!;
 const segmentsRoot = document.querySelector<HTMLElement>("#segments")!;
@@ -29,7 +37,7 @@ const sizeSwitch = document.querySelector<HTMLElement>("#size-switch")!;
 let currentCodes: string[] = [];
 let opened = false;
 
-function field(name: string, label: string, value: number, min: number): HTMLLabelElement {
+function field(name: string, label: string, placeholder: string, min: number): HTMLLabelElement {
   const wrapper = document.createElement("label");
   wrapper.className = "field";
   const title = document.createElement("span");
@@ -41,14 +49,15 @@ function field(name: string, label: string, value: number, min: number): HTMLLab
   input.min = String(min);
   input.step = "1";
   input.required = true;
-  input.value = String(value);
+  input.placeholder = placeholder;
+  input.value = "";
   input.inputMode = "numeric";
   wrapper.append(title, input);
   return wrapper;
 }
 
 function buildSegments(): void {
-  DEFAULT_SEGMENTS.forEach((segment, index) => {
+  PLACEHOLDERS.forEach((segment, index) => {
     const row = document.createElement("div");
     row.className = "segment";
     row.dataset.index = String(index);
@@ -68,7 +77,7 @@ function buildSegments(): void {
       const option = document.createElement("option");
       option.value = mode.value;
       option.textContent = mode.label;
-      option.selected = mode.value === segment.mode;
+      option.selected = mode.value === "fixed";
       select.append(option);
     }
     modeLabel.append(modeTitle, select);
@@ -90,14 +99,21 @@ function buildSegments(): void {
 function syncMode(row: HTMLElement): void {
   const mode = row.querySelector<HTMLSelectElement>('[name="mode"]')!.value;
   const locked = mode === "fixed";
-  for (const name of ["end", "step"]) {
+  const sample = PLACEHOLDERS[Number(row.dataset.index)];
+  for (const name of ["end", "step"] as const) {
     const input = row.querySelector<HTMLInputElement>(`[name="${name}"]`)!;
     input.disabled = locked;
+    input.placeholder = locked ? "" : sample[name];
   }
 }
 
 function readInteger(input: HTMLInputElement): number {
+  if (input.value.trim() === "") return Number.NaN;
   return Number(input.value);
+}
+
+function fieldsAreEmpty(): boolean {
+  return [...segmentsRoot.querySelectorAll<HTMLInputElement>("input")].every((input) => input.value.trim() === "");
 }
 
 function readSegments(): SegmentConfig[] {
@@ -166,6 +182,11 @@ function sameCodes(codes: string[]): boolean {
 }
 
 function refreshCount(): void {
+  if (fieldsAreEmpty()) {
+    setError("");
+    countEl.textContent = "填写后生成";
+    return;
+  }
   const counted = countLabels(readSegments());
   if ("error" in counted) {
     renderCount(null, false);
@@ -176,11 +197,21 @@ function refreshCount(): void {
   renderCount(counted.count, false);
 }
 
+function showExample(): void {
+  currentCodes = [];
+  document.body.dataset.size = selectedSize();
+  preview.classList.add("is-example");
+  renderLabels(preview, [EXAMPLE_CODE], selectedSize());
+  previewHint.textContent = "屏幕为缩小预览，打印为实际尺寸";
+  setPrintEnabled(false);
+}
+
 function showLabels(codes: string[]): void {
   const size = selectedSize();
   const reuse = sameCodes(codes) && preview.childElementCount === codes.length;
   currentCodes = codes;
   document.body.dataset.size = size;
+  preview.classList.remove("is-example");
   if (reuse) setLabelSizeClass(size);
   else renderLabels(preview, codes, size);
   previewHint.textContent = "屏幕为缩小预览，打印为实际尺寸";
@@ -191,6 +222,7 @@ function generate(): void {
   const result = generateCodes(readSegments());
   if (!result.ok) {
     currentCodes = [];
+    preview.classList.remove("is-example");
     preview.replaceChildren();
     previewHint.textContent = "";
     renderCount(null, false);
@@ -215,7 +247,7 @@ function applyPage(mode: "label" | "a4"): void {
 
 buildSegments();
 refreshCount();
-generate();
+showExample();
 placeThumb(false);
 window.addEventListener("resize", () => placeThumb(false));
 
@@ -232,6 +264,7 @@ sizeSwitch.querySelectorAll<HTMLInputElement>('input[name="size"]').forEach((inp
   input.addEventListener("change", () => {
     placeThumb(true);
     if (currentCodes.length > 0) showLabels(currentCodes);
+    else showExample();
   });
 });
 

@@ -140,6 +140,10 @@ select {
   border: 0;
 }
 
+input::placeholder {
+  color: var(--text-disabled);
+}
+
 input,
 select {
   width: 100%;
@@ -390,6 +394,15 @@ button.primary {
 
 body[data-size="7x4"] .preview {
   grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+}
+
+.preview.is-example {
+  grid-template-columns: minmax(0, 420px);
+  justify-content: center;
+}
+
+body[data-size="7x4"] .preview.is-example {
+  grid-template-columns: minmax(0, 196px);
 }
 
 .label {
